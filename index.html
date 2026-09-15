@@ -117,7 +117,7 @@ main{padding:0}
     <legend>Pembagian ruang</legend>
     <div class="seg" data-k="mode" role="group" aria-label="Mode ruang">
       <button type="button" data-v="single">Satu hall</button>
-      <button type="button" data-v="split">Dibagi 2</button>
+      <!-- <button type="button" data-v="split">Dibagi 2</button> -->
     </div>
     <div class="row one"><label class="f">Jarak bebas kiri-kanan rel partisi (m)<input type="number" data-k="pc" min="0" max="10" step="0.1"></label></div>
     <p class="hint">Berlaku saat ruangan dibagi 2. Isi 0 kalau rel partisi tidak mengganggu meja.</p>
@@ -149,34 +149,35 @@ main{padding:0}
 
   <fieldset>
     <legend>Meja dan kursi</legend>
-    <p class="seglabel">Diameter meja</p>
-    <div class="seg" data-k="dia" role="group" aria-label="Diameter meja">
+    <p class="seglabel">Ukuran round table (diameter, cm)</p>
+    <p class="hint">Karena mejanya bundar, ukurannya pakai diameter: lebar dari tepi ke tepi yang melewati titik tengah meja.</p>
+    <div class="seg" data-k="dia" role="group" aria-label="Ukuran round table (diameter, cm)">
       <button type="button" data-v="120">120</button>
       <button type="button" data-v="150">150</button>
       <button type="button" data-v="160">160</button>
       <button type="button" data-v="180">180</button>
     </div>
-    <div class="row one"><label class="f">Diameter lain (cm)<input type="number" data-k="dia" min="60" max="300" step="1"></label></div>
+    <div class="row one"><label class="f">Ukuran lain (diameter, cm)<input type="number" data-k="dia" min="60" max="300" step="1"></label></div>
     <p class="seglabel">Jarak antar meja</p>
     <div class="seg" data-k="sp" role="group" aria-label="Jarak antar meja">
       <button type="button" data-v="std">Standar</button>
       <button type="button" data-v="nym">Nyaman</button>
       <button type="button" data-v="custom">Atur sendiri</button>
     </div>
-    <div class="row one"><label class="f">Jarak tepi meja ke tepi meja (m)<input type="number" data-k="gap" min="0.8" max="6" step="0.1"></label></div>
-    <p class="hint">Standar 1,8 m, nyaman 2,2 m. Angka ini sudah termasuk kursi di kedua meja.</p>
+    <div class="row one"><label class="f">Jarak dari tepi meja ke meja sebelahnya (m)<input type="number" data-k="gap" min="0.8" max="6" step="0.1"></label></div>
+    <p class="hint">Standarnya 1,8 m, atau 2,2 m kalau ingin lebih lega. Jarak ini sudah memperhitungkan kursi di kedua meja.</p>
     <div class="row">
-      <label class="f">Lebar per kursi (cm)<input type="number" data-k="cw" min="40" max="90" step="1"></label>
+      <label class="f">Ruang per kursi (cm)<input type="number" data-k="cw" min="40" max="90" step="1"></label>
       <label class="f">Kursi per meja<input type="number" data-k="chairs" min="0" max="20" step="1"></label>
     </div>
-    <p class="hint">Isi kursi per meja 0 agar dihitung otomatis dari keliling meja. Nyaman 60 cm, rapat 50 cm.</p>
+    <p class="hint">Biarkan kursi per meja di angka 0, nanti jumlahnya dihitung otomatis dari keliling meja. Ruang 60 cm per kursi terasa lega, 50 cm sudah cukup rapat.</p>
     <p class="seglabel">Pola susunan</p>
     <div class="seg" data-k="pat" role="group" aria-label="Pola susunan">
       <button type="button" data-v="auto">Otomatis</button>
       <button type="button" data-v="zig">Zig-zag</button>
       <button type="button" data-v="grid">Grid lurus</button>
     </div>
-    <p class="hint">Otomatis memilih pola yang menampung meja paling banyak.</p>
+    <p class="hint">Pilih Otomatis kalau ingin memakai pola yang muat meja paling banyak.</p>
   </fieldset>
 
   <fieldset>
