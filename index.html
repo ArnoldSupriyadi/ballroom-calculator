@@ -346,7 +346,8 @@ function svgPlan(r,opt){
   const pw=W*S,ph=D*S;
   const vw=Math.max(L+pw+R,640);
   const tbY=T+ph+(q.pre?92:60)+(ex?0:(q.guide?140:(r.prop?34:0)));
-  const vh=tbY+200;
+  const boxH=46+Math.max(4+(q.stage?1:0)+(r.prop?1:0)+(q.buffet!=='none'?1:0),6)*22+8;
+  const vh=tbY+boxH+14;
   const X=v=>L+v*S,Y=v=>T+v*S;
   const dimH=(a,b,y,lab)=>ln(a,y,b,y)+ln(a,y-4,a,y+4)+ln(b,y-4,b,y+4)+t((a+b)/2,y+13,lab,{w:600,c:C.ink});
   let g='';
@@ -427,11 +428,11 @@ function svgPlan(r,opt){
   g+=ln(dx,Y(0),dx,Y(D))+ln(dx-4,Y(0),dx+4,Y(0))+ln(dx-4,Y(D),dx+4,Y(D));
   g+=t(dx,T-12,`${nf(D)} m`,{w:600,c:C.ink});
   if(ex&&q.stage){
-    // rantai ukuran digambar di dalam denah, pada jalur keliling sisi kiri
-    const segs=[[0,q.sb],[q.sb,q.sb+q.sd]];
-    if(r.prop){segs.push([q.sb+q.sd,r.prop.y0],[r.prop.y0,r.prop.y1],[r.prop.y1,r.top]);}
+    // ukuran digambar menempel pada stage dan propertinya sendiri
+    const ssw=Math.min(q.sw,W),ssx=(W-ssw)/2,dxc=X(ssx+ssw/4);
+    const segs=[[0,q.sb]];
+    if(r.prop){segs.push([q.sb+q.sd,r.prop.y0],[r.prop.y1,r.top]);}
     else segs.push([q.sb+q.sd,r.top]);
-    const dxc=X(Math.max(0.5,Math.min(q.perim/2,0.9)));
     const pos=[];let lastY=-1e9;
     segs.forEach(([a,b])=>{
       if(b-a<0.05)return;
@@ -439,16 +440,17 @@ function svgPlan(r,opt){
       let ty=mid;if(ty<lastY+15)ty=lastY+15;lastY=ty;
       pos.push({a,b,ya,yb,mid,ty});
     });
-    // rapikan dari bawah supaya angka tidak terdorong keluar ke area meja
+    // tahan dari bawah supaya angka tidak terdorong masuk ke area meja
     let lim=Y(r.top)-8;
-    for(let i=pos.length-1;i>=0;i--){if(pos[i].ty>lim)pos[i].ty=lim;lim=pos[i].ty-15}
+    for(let i2=pos.length-1;i2>=0;i2--){if(pos[i2].ty>lim)pos[i2].ty=lim;lim=pos[i2].ty-15}
     pos.forEach(({ya,yb,mid,ty,a,b})=>{
       const lab=`${nf(b-a,2)} m`;
-      g+=ln(dxc,ya,dxc,yb,C.cyan,1.8,'5 4')+ln(dxc-5,ya,dxc+5,ya,C.cyan,1.8)+ln(dxc-5,yb,dxc+5,yb,C.cyan,1.8);
+      g+=ln(dxc,ya,dxc,yb,C.cyan,1.8,'5 4')+ln(dxc-6,ya,dxc+6,ya,C.cyan,1.8)+ln(dxc-6,yb,dxc+6,yb,C.cyan,1.8);
       if(Math.abs(ty-mid)>3)g+=ln(dxc+3,mid,dxc+9,ty,C.cyan,0.6);
       g+=chip(dxc+10+chipW(lab,11)/2,ty,lab,{stroke:C.cyan,c:C.cyanT,s:11});
     });
   }
+
   const propNote=r.prop?(()=>{const nm=(q.pnm||'').trim();
     return nm&&nm.toLowerCase()!=='properti'
       ? `Kotak garis putus-putus cyan adalah ${nm}, properti yang berdiri di depan stage.`
@@ -480,10 +482,13 @@ function svgPlan(r,opt){
   }
 
   const tx=20,tw=vw-40,colW=tw/2;
-  const rowsL=[['Luas',`${nf(W*D,1)} m²`],['Dimensi',`${nf(W)} × ${nf(D)} m`],['Mode ruang',q.mode==='split'?`Dibagi 2 @ ${nf(W*D/2,1)} m²`:'Satu hall'],['Tipe layout',`Round table, ${r.pname.toLowerCase()}`],['Stage',q.stage?`${nf(Math.min(q.sw,W))} × ${nf(q.sd)} m`:'Tidak ada'],['Properti',r.prop?`${esc(q.pnm||'Properti')} ${r.prop.pieces.length>1?'2 potong @ ':''}${nf(r.prop.pieces[0][1]-r.prop.pieces[0][0])} × ${nf(r.prop.y1-r.prop.y0)} m`:'Tidak ada'],['Buffet',q.buffet==='none'?'Tidak ada':`${{back:'Belakang',left:'Kiri',right:'Kanan',both:'Kiri dan kanan'}[q.buffet]}, ±${nf(r.counterLen)} m meja`]];
+  const rowsL=[['Luas',`${nf(W*D,1)} m²`],['Dimensi',`${nf(W)} × ${nf(D)} m`],['Mode ruang',q.mode==='split'?`Dibagi 2 @ ${nf(W*D/2,1)} m²`:'Satu hall'],['Tipe layout',`Round table, ${r.pname.toLowerCase()}`]];
+  if(q.stage)rowsL.push(['Stage',`${nf(Math.min(q.sw,W))} × ${nf(q.sd)} m`]);
+  if(r.prop)rowsL.push(['Properti',`${esc(q.pnm||'Properti')} ${r.prop.pieces.length>1?'2 potong @ ':''}${nf(r.prop.pieces[0][1]-r.prop.pieces[0][0])} × ${nf(r.prop.y1-r.prop.y0)} m`]);
+  if(q.buffet!=='none')rowsL.push(['Buffet',`${{back:'Belakang',left:'Kiri',right:'Kanan',both:'Kiri dan kanan'}[q.buffet]}, ±${nf(r.counterLen)} m meja`]);
   const rowsR=[['Meja',`${r.tables.length} meja Ø ${q.dia} cm`+(r.sideA!==null?` (${r.sideA} + ${r.sideB})`:'')],['Kursi per meja',`${r.n} kursi`],['Kapasitas',`${nf(r.pax,0)} pax`+(r.sideA!==null?` (${r.sideA*r.n} + ${r.sideB*r.n})`:'')],['Luas per pax',r.pax?`${nf(W*D/r.pax,2)} m² bruto`:'-'],['Tengah ke tengah',`${nf(r.m,2)} m`],['Jalur keliling',`${nf(q.perim)} m`]];
-  g+=`<rect x="${tx}" y="${tbY}" width="${tw}" height="186" fill="#fff" stroke="${C.ink}" stroke-width="1.5"/>`;
-  g+=ln(tx,tbY+46,tx+tw,tbY+46,C.ink,1)+ln(tx+colW,tbY+46,tx+colW,tbY+186,C.rule,1);
+  g+=`<rect x="${tx}" y="${tbY}" width="${tw}" height="${boxH}" fill="#fff" stroke="${C.ink}" stroke-width="1.5"/>`;
+  g+=ln(tx,tbY+46,tx+tw,tbY+46,C.ink,1)+ln(tx+colW,tbY+46,tx+colW,tbY+boxH,C.rule,1);
   g+=t(tx+14,tbY+17,q.name||'Ballroom',{a:'start',s:17,w:700,c:C.ink});
   g+=t(tx+14,tbY+35,'Estimasi layout round table, bukan kapasitas resmi gedung',{a:'start',s:11});
   g+=t(tx+tw-14,tbY+19,`${nf(r.pax,0)} pax`,{a:'end',s:24,w:700,c:C.accent});
