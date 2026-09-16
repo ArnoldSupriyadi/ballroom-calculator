@@ -138,6 +138,21 @@ main{padding:0}
   </fieldset>
 
   <fieldset>
+    <legend>Properti depan stage</legend>
+    <label class="check"><input type="checkbox" data-k="prop"> Pakai properti di depan stage</label>
+    <div class="row one"><label class="f">Nama properti<input type="text" data-k="pnm" maxlength="30"></label></div>
+    <div class="row">
+      <label class="f">Panjang (m)<input type="number" data-k="ppj" min="0.3" max="60" step="0.1"></label>
+      <label class="f">Lebar (m)<input type="number" data-k="plb" min="0.2" max="20" step="0.1"></label>
+    </div>
+    <div class="row">
+      <label class="f">Jarak dari stage (m)<input type="number" data-k="pjs" min="0" max="30" step="0.1"></label>
+      <label class="f">Celah bebas ke meja (m)<input type="number" data-k="pcm" min="0" max="10" step="0.1"></label>
+    </div>
+    <p class="hint">Properti diletakkan di tengah, sejajar stage. Zona meja tidak dimundurkan — hanya meja yang bertabrakan dengan properti beserta celah bebasnya yang dihapus, jadi meja di kiri-kanannya tetap boleh maju.</p>
+  </fieldset>
+
+  <fieldset>
     <legend>Buffet</legend>
     <label class="f" style="margin-top:10px">Posisi meja buffet
       <select data-k="buffet">
@@ -218,18 +233,18 @@ main{padding:0}
 </div>
 
 <footer>
-  <p>Cara hitung: jarak as meja = diameter + jarak tepi ke tepi. Kursi otomatis = keliling meja dibagi lebar kursi, dibulatkan ke angka genap. Jalur antar sandaran = jarak tepi ke tepi dikurangi 2 × 0,6 m ruang kursi.</p>
+  <p>Cara hitung: jarak tengah ke tengah = diameter meja + jarak antar meja. Kursi otomatis = keliling meja dibagi lebar kursi, dibulatkan ke angka genap. Jalur antar sandaran = jarak tepi ke tepi dikurangi 2 × 0,6 m ruang kursi.</p>
   <p>Kapasitas legal ditentukan jalur evakuasi, jumlah pintu darurat, dan ketentuan proteksi kebakaran gedung. Kolom struktur, rel partisi lantai, dan perabot tetap tidak dihitung kecuali digambar pada preset.</p>
 </footer>
 
 <script>
-const DEF={name:'Ballroom Lantai 3',W:25,D:26,perim:1.5,pre:1,mode:'single',pc:1.5,stage:1,sw:10,sd:4,sb:1,sf:2,buffet:'none',bd:3.5,dia:180,sp:'std',gap:1.8,cw:60,chairs:0,pat:'zig',nums:1,showCh:1,guide:1};
+const DEF={name:'Ballroom Lantai 3',W:25,D:26,perim:1.5,pre:1,mode:'single',pc:1.5,stage:1,sw:10,sd:4,sb:1,sf:2,prop:1,pnm:'Properti',ppj:6,plb:1,pjs:3,pcm:3,buffet:'none',bd:3.5,dia:180,sp:'std',gap:1.8,cw:60,chairs:0,pat:'zig',nums:1,showCh:1,guide:1};
 let s={...DEF};
 const $=id=>document.getElementById(id);
 const fl=v=>Math.floor(v+1e-9);
 const nf=(v,d=1)=>Number(v).toLocaleString('id-ID',{minimumFractionDigits:0,maximumFractionDigits:d});
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const C={ink:'#1C2B39',ink2:'#4F5F6E',rule:'#C9D1D6',accent:'#2F5D8A',accentBg:'#DCE7F1',table:'#E9CF8C',tableS:'#9C7A28',tableT:'#5E4712',chair:'#56687A',rail:'#B4432F',buf:'#3F7D5C',bufBg:'#E1EFE7',util:'#EEF1F1',guide:'#55E07E',guideT:'#1E7A45',pink:'#FF7FB6',pinkT:'#A81E5E'};
+const C={ink:'#1C2B39',ink2:'#4F5F6E',rule:'#C9D1D6',accent:'#2F5D8A',accentBg:'#DCE7F1',table:'#E9CF8C',tableS:'#9C7A28',tableT:'#5E4712',chair:'#56687A',rail:'#B4432F',buf:'#3F7D5C',bufBg:'#E1EFE7',util:'#EEF1F1',guide:'#55E07E',guideT:'#1E7A45',pink:'#FF7FB6',pinkT:'#A81E5E',cyan:'#22D3EE',cyanT:'#0E7490',cyanBg:'#ECFEFF'};
 
 function grid(xs,W,top,D,m){const o=[];if(W<m||D<m)return o;const c=fl(W/m),r=fl(D/m);const x0=xs+(W-(c-1)*m)/2,y0=top+(D-(r-1)*m)/2;for(let j=0;j<r;j++)for(let i=0;i<c;i++)o.push([x0+i*m,y0+j*m]);return o}
 function hex(xs,W,top,D,m){const o=[];if(W<m||D<m)return o;const p=m,rp=m*Math.sqrt(3)/2;const n1=fl((W-m)/p)+1,n2=Math.max(0,fl((W-m-p/2)/p)+1),rows=fl((D-m)/rp)+1;const y0=top+(D-(rows-1)*rp)/2;const span=n2<n1?(n1-1)*p:(n1-1)*p+p/2;const x0=xs+(W-span)/2;for(let j=0;j<rows;j++){const f=j%2===0,n=f?n1:n2,off=f?0:p/2;for(let i=0;i<n;i++)o.push([x0+off+i*p,y0+j*rp])}return o}
@@ -258,6 +273,16 @@ function cut(a,b,blocks,min=1.5){
   return segs.filter(([s,t])=>t-s>=min);
 }
 function gapOf(q){return q.sp==='std'?1.8:q.sp==='nym'?2.2:q.gap}
+function propGeo(q){
+  if(!q.stage||!q.prop)return null;
+  const y0=q.sb+q.sd+q.pjs,x0=(q.W-q.ppj)/2;
+  return {x0,y0,x1:x0+q.ppj,y1:y0+q.plb,cl:q.pcm};
+}
+// meja dibuang hanya kalau badannya menyentuh properti beserta celah bebasnya
+function hitsProp(cx,cy,rad,P){
+  const ax=Math.max(P.x0-P.cl,Math.min(cx,P.x1+P.cl)),ay=Math.max(P.y0-P.cl,Math.min(cy,P.y1+P.cl));
+  return Math.hypot(cx-ax,cy-ay)<rad;
+}
 
 function compute(over){
   const q={...s,...over};
@@ -277,6 +302,8 @@ function compute(over){
     const w=Math.max(0,x2-x1);zones=[[x1,y1,w,Dz]];
     const a=place(x1,w,y1,Dz,m,q.pat);tables=a.l;pname=a.n;
   }
+  const prop=propGeo(q);let propCut=0;
+  if(prop){const before=tables.length;tables=tables.filter(([x,y])=>!hitsProp(x,y,d/2,prop));propCut=before-tables.length}
   const n=q.chairs>0?Math.round(q.chairs):chairsFor(q.dia,q.cw);
   const geo=presetGeo(q.W,q.D),counters=[],clears=[];
   if(bl||br){
@@ -299,7 +326,7 @@ function compute(over){
     doorB.forEach(([a,b])=>{const s1=Math.max(a,zx),s2=Math.min(b,zx+zw);if(s2>s1)clears.push([s1,zy,s2-s1,q.bd])});
   }
   const counterLen=counters.reduce((t,c)=>t+c.len,0);
-  return {q,d,gap,m,top,x1,x2,y1,y2,bl,br,bb,tables,zones,pname,sideA,sideB,n,pax:tables.length*n,aisle:gap-1.2,geo,counters,clears,counterLen};
+  return {q,d,gap,m,top,x1,x2,y1,y2,bl,br,bb,tables,zones,pname,sideA,sideB,n,pax:tables.length*n,aisle:gap-1.2,geo,counters,clears,counterLen,prop,propCut};
 }
 
 const t=(x,y,str,o={})=>`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${o.a||'middle'}" dominant-baseline="central" font-size="${o.s||12}" font-weight="${o.w||400}" fill="${o.c||C.ink2}">${esc(str)}</text>`;
@@ -340,6 +367,11 @@ function svgPlan(r){
     const sw=Math.min(q.sw,W),sx=(W-sw)/2;
     g+=`<rect x="${X(sx)}" y="${Y(q.sb)}" width="${sw*S}" height="${q.sd*S}" rx="4" fill="${C.accentBg}" stroke="${C.accent}" stroke-width="1"/>`;
     if(q.sd*S>34){g+=t(X(W/2),Y(q.sb+q.sd/2)-8,'Stage',{w:600,c:C.accent})+t(X(W/2),Y(q.sb+q.sd/2)+8,`${nf(sw)} × ${nf(q.sd)} m`,{c:C.accent})}
+  }
+  if(r.prop){
+    const P=r.prop,pw2=(P.x1-P.x0)*S,ph2=(P.y1-P.y0)*S;
+    g+=`<rect x="${X(P.x0).toFixed(1)}" y="${Y(P.y0).toFixed(1)}" width="${pw2.toFixed(1)}" height="${ph2.toFixed(1)}" rx="5" fill="${C.cyanBg}" stroke="${C.cyan}" stroke-width="2" stroke-dasharray="6 4"/>`;
+    if(ph2>15&&pw2>46)g+=t(X((P.x0+P.x1)/2),Y((P.y0+P.y1)/2),q.pnm||'Properti',{w:600,c:C.cyanT,s:11});
   }
   if(q.pre){
     const G0=r.geo;
@@ -397,20 +429,20 @@ function svgPlan(r){
     g+=t(x0,iy,'Panduan ukuran',{a:'start',s:12,w:700,c:C.ink});
     [cA,cB].forEach(cx=>{g+=`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${rr}" fill="${C.table}" stroke="${C.tableS}" stroke-width="0.8"/>`+t(cx,cy,`Ø ${nf(r.d,2)}`,{s:10,c:C.tableT})});
     g+=ln(cA+rr,cy,cB-rr,cy,C.guide,2,'5 4')+ln(cA+rr,cy-11,cA+rr,cy+11,C.guide,2)+ln(cB-rr,cy-11,cB-rr,cy+11,C.guide,2);
-    g+=t((cA+cB)/2,cy+rr+15,`${nf(r.gap)} m`,{s:11,w:700,c:C.guideT});
+    g+=t((cA+cB)/2,cy+rr+15,`tepi ke tepi ${nf(r.gap)} m`,{s:11,w:700,c:C.guideT});
     g+=ln(cA,cy-rr,cA,ay,C.pink,0.8,'3 3')+ln(cB,cy-rr,cB,ay,C.pink,0.8,'3 3');
     g+=ln(cA,ay,cB,ay,C.pink,1.2,'5 4')+ln(cA,ay-6,cA,ay+6,C.pink,1.2)+ln(cB,ay-6,cB,ay+6,C.pink,1.2);
-    g+=t((cA+cB)/2,ay-11,`${nf(r.m,2)} m`,{s:11,w:700,c:C.pinkT});
+    g+=t((cA+cB)/2,ay-11,`tengah ke tengah ${nf(r.m,2)} m`,{s:11,w:700,c:C.pinkT});
     g+=ln(tx2,cy-14,tx2+26,cy-14,C.guide,2,'5 4');
     g+=t(tx2+34,cy-14,`Jarak antar meja ${nf(r.gap)} m — diukur dari tepi meja ke tepi meja. Angka inilah yang kamu atur di panel.`,{a:'start',s:11,c:C.ink});
     g+=ln(tx2,cy+10,tx2+26,cy+10,C.pink,1.2,'5 4');
-    g+=t(tx2+34,cy+10,`Jarak as ke as ${nf(r.m,2)} m — dari titik tengah ke titik tengah, yaitu diameter ${nf(r.d,2)} m + jarak antar meja ${nf(r.gap)} m.`,{a:'start',s:11,c:C.ink});
+    g+=t(tx2+34,cy+10,`Jarak tengah ke tengah ${nf(r.m,2)} m — jatah ruang yang dipakai satu meja: diameter ${nf(r.d,2)} m + jarak antar meja ${nf(r.gap)} m.`,{a:'start',s:11,c:C.ink});
     g+=t(tx2+34,cy+28,'Jarak antar meja sudah termasuk kursi kedua meja yang saling membelakangi.',{a:'start',s:11});
   }
 
   const tx=20,tw=vw-40,colW=tw/2;
-  const rowsL=[['Luas',`${nf(W*D,1)} m²`],['Dimensi',`${nf(W)} × ${nf(D)} m`],['Mode ruang',q.mode==='split'?`Dibagi 2 @ ${nf(W*D/2,1)} m²`:'Satu hall'],['Tipe layout',`Round table, ${r.pname.toLowerCase()}`],['Stage',q.stage?`${nf(Math.min(q.sw,W))} × ${nf(q.sd)} m`:'Tidak ada'],['Buffet',q.buffet==='none'?'Tidak ada':`${{back:'Belakang',left:'Kiri',right:'Kanan',both:'Kiri dan kanan'}[q.buffet]}, ±${nf(r.counterLen)} m meja`]];
-  const rowsR=[['Meja',`${r.tables.length} meja Ø ${q.dia} cm`+(r.sideA!==null?` (${r.sideA} + ${r.sideB})`:'')],['Kursi per meja',`${r.n} kursi`],['Kapasitas',`${nf(r.pax,0)} pax`+(r.sideA!==null?` (${r.sideA*r.n} + ${r.sideB*r.n})`:'')],['Luas per pax',r.pax?`${nf(W*D/r.pax,2)} m² bruto`:'-'],['Jarak as meja',`${nf(r.m,2)} m`],['Jalur keliling',`${nf(q.perim)} m`]];
+  const rowsL=[['Luas',`${nf(W*D,1)} m²`],['Dimensi',`${nf(W)} × ${nf(D)} m`],['Mode ruang',q.mode==='split'?`Dibagi 2 @ ${nf(W*D/2,1)} m²`:'Satu hall'],['Tipe layout',`Round table, ${r.pname.toLowerCase()}`],['Stage',q.stage?`${nf(Math.min(q.sw,W))} × ${nf(q.sd)} m`:'Tidak ada'],['Properti',r.prop?`${esc(q.pnm||'Properti')} ${nf(r.prop.x1-r.prop.x0)} × ${nf(r.prop.y1-r.prop.y0)} m`:'Tidak ada'],['Buffet',q.buffet==='none'?'Tidak ada':`${{back:'Belakang',left:'Kiri',right:'Kanan',both:'Kiri dan kanan'}[q.buffet]}, ±${nf(r.counterLen)} m meja`]];
+  const rowsR=[['Meja',`${r.tables.length} meja Ø ${q.dia} cm`+(r.sideA!==null?` (${r.sideA} + ${r.sideB})`:'')],['Kursi per meja',`${r.n} kursi`],['Kapasitas',`${nf(r.pax,0)} pax`+(r.sideA!==null?` (${r.sideA*r.n} + ${r.sideB*r.n})`:'')],['Luas per pax',r.pax?`${nf(W*D/r.pax,2)} m² bruto`:'-'],['Tengah ke tengah',`${nf(r.m,2)} m`],['Jalur keliling',`${nf(q.perim)} m`]];
   g+=`<rect x="${tx}" y="${tbY}" width="${tw}" height="186" fill="#fff" stroke="${C.ink}" stroke-width="1.5"/>`;
   g+=ln(tx,tbY+46,tx+tw,tbY+46,C.ink,1)+ln(tx+colW,tbY+46,tx+colW,tbY+186,C.rule,1);
   g+=t(tx+14,tbY+17,q.name||'Ballroom',{a:'start',s:17,w:700,c:C.ink});
@@ -423,7 +455,7 @@ function svgPlan(r){
 
   const psw=Math.min(q.sw,W);
   PV={S,L,T,W,D,tables:r.tables,d:r.d,m:r.m,gap:r.gap,n:r.n,aisle:r.aisle,showCh:q.showCh,vw,
-      stage:q.stage,sw:psw,sx:(W-psw)/2,sb:q.sb,sd:q.sd,top:r.top};
+      stage:q.stage,sw:psw,sx:(W-psw)/2,sb:q.sb,sd:q.sd,top:r.top,prop:r.prop,pnm:q.pnm||'Properti'};
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${vw.toFixed(0)} ${vh.toFixed(0)}" font-family="Archivo, Arial, sans-serif" role="img" aria-label="Denah ${esc(q.name)}: ${r.tables.length} meja, ${r.pax} pax"><rect width="100%" height="100%" fill="#fff"/>${g}<g id="hov"></g></svg>`;
 }
 
@@ -451,15 +483,15 @@ function tableMark(i,cx,cy,focus){
   if(P.d*P.S>16)o+=t(X,Y,String(i+1),{s:11,c:C.tableT});
   return o;
 }
-function vMeas(x,ya,yb,val){
-  const span=Math.abs(yb-ya);
-  return ln(x,ya,x,yb,C.guide,2,'5 4')+ln(x-8,ya,x+8,ya,C.guide,2)+ln(x-8,yb,x+8,yb,C.guide,2)
-    +chip(x+(span<34?32:0),(ya+yb)/2,`${nf(val,2)} m`);
+function vMeas(x,ya,yb,val,col,colT){
+  const c=col||C.guide,span=Math.abs(yb-ya);
+  return ln(x,ya,x,yb,c,2,'5 4')+ln(x-8,ya,x+8,ya,c,2)+ln(x-8,yb,x+8,yb,c,2)
+    +chip(x+(span<34?32:0),(ya+yb)/2,`${nf(val,2)} m`,{stroke:c,c:colT||C.guideT});
 }
-function hMeas(y,xa,xb,val){
-  const span=Math.abs(xb-xa);
-  return ln(xa,y,xb,y,C.guide,2,'5 4')+ln(xa,y-8,xa,y+8,C.guide,2)+ln(xb,y-8,xb,y+8,C.guide,2)
-    +chip((xa+xb)/2,y+(span<40?20:0),`${nf(val,2)} m`);
+function hMeas(y,xa,xb,val,col,colT){
+  const c=col||C.guide,span=Math.abs(xb-xa);
+  return ln(xa,y,xb,y,c,2,'5 4')+ln(xa,y-8,xa,y+8,c,2)+ln(xb,y-8,xb,y+8,c,2)
+    +chip((xa+xb)/2,y+(span<40?20:0),`${nf(val,2)} m`,{stroke:c,c:colT||C.guideT});
 }
 function hitStage(px,py){
   const P=PV;if(!P||!P.stage)return false;
@@ -481,6 +513,29 @@ function stageOverlay(){
   o+=vMeas(cxm,y2,Y(P.top),P.top-P.sb-P.sd);
   o+=hMeas(cym,X(0),x1,P.sx);
   o+=hMeas(cym,x2,X(P.W),P.W-P.sx-P.sw);
+  return o;
+}
+function hitProp(px,py){
+  const P=PV;if(!P||!P.prop)return false;
+  const g=P.prop;
+  return px>=P.L+g.x0*P.S&&px<=P.L+g.x1*P.S&&py>=P.T+g.y0*P.S&&py<=P.T+g.y1*P.S;
+}
+function propInfo(){
+  const P=PV,g=P.prop;
+  return `${P.pnm} · ${nf(g.x1-g.x0)} × ${nf(g.y1-g.y0)} m · ${nf(P.sb+P.sd>0?g.y0-P.sb-P.sd:0,2)} m dari stage · ${nf(g.cl,2)} m celah bebas ke meja · ${nf(g.x0,2)} m dari dinding kiri · ${nf(P.W-g.x1,2)} m dari dinding kanan`;
+}
+function propOverlay(){
+  const P=PV,g=P.prop;if(!g)return '';
+  const X=v=>P.L+v*P.S,Y=v=>P.T+v*P.S;
+  const x1=X(g.x0),x2=X(g.x1),y1=Y(g.y0),y2=Y(g.y1),cxm=(x1+x2)/2,cym=(y1+y2)/2;
+  let o=`<rect x="${X(0).toFixed(1)}" y="${Y(0).toFixed(1)}" width="${(P.W*P.S).toFixed(1)}" height="${(P.D*P.S).toFixed(1)}" fill="#fff" opacity="0.58"/>`;
+  o+=`<rect x="${X(g.x0-g.cl).toFixed(1)}" y="${Y(g.y0-g.cl).toFixed(1)}" width="${((g.x1-g.x0+2*g.cl)*P.S).toFixed(1)}" height="${((g.y1-g.y0+2*g.cl)*P.S).toFixed(1)}" rx="6" fill="none" stroke="${C.cyan}" stroke-width="1" stroke-dasharray="3 3" opacity="0.7"/>`;
+  o+=`<rect x="${x1.toFixed(1)}" y="${y1.toFixed(1)}" width="${(x2-x1).toFixed(1)}" height="${(y2-y1).toFixed(1)}" rx="5" fill="${C.cyanBg}" stroke="${C.cyan}" stroke-width="3" stroke-dasharray="6 4"/>`;
+  if((y2-y1)>15&&(x2-x1)>46)o+=t(cxm,cym,P.pnm,{w:600,c:C.cyanT,s:11});
+  o+=vMeas(cxm,Y(P.sb+P.sd),y1,g.y0-P.sb-P.sd,C.cyan,C.cyanT);
+  o+=vMeas(cxm,y2,Y(g.y1+g.cl),g.cl,C.cyan,C.cyanT);
+  o+=hMeas(cym,X(0),x1,g.x0,C.cyan,C.cyanT);
+  o+=hMeas(cym,x2,X(P.W),P.W-g.x1,C.cyan,C.cyanT);
   return o;
 }
 function neighbors(i){
@@ -521,6 +576,8 @@ function notes(r){
     else if(q.pre)o.push(['info',`Meja buffet dipotong di depan pintu dengan jarak bebas ${nf(DOOR_CLR,2)} m di kiri-kanan bukaan, serta menghindari kotak dinding dan ceruk. Total panjang meja buffet ±${nf(r.counterLen)} m.`]);
     else o.push(['warn','Posisi pintu ruangan custom tidak diketahui aplikasi. Pastikan meja buffet tidak menutup pintu saat dicek di lokasi.']);
   }
+  if(r.prop&&r.propCut>0)o.push(['info',`${q.pnm||'Properti'} ${nf(r.prop.x1-r.prop.x0)} × ${nf(r.prop.y1-r.prop.y0)} m membuat ${r.propCut} meja dihapus karena bertabrakan dengannya atau dengan celah bebas ${nf(q.pcm)} m di sekelilingnya.`]);
+  if(q.stage&&q.prop&&r.prop&&r.prop.y1+q.pcm>r.y2)o.push(['warn','Properti beserta celah bebasnya melewati batas bawah zona meja. Kecilkan jarak dari stage atau celah bebasnya.']);
   if(q.stage&&q.sw>q.W-2*q.perim)o.push(['warn','Stage lebih lebar dari ruang di antara jalur keliling.']);
   if(q.mode==='split'&&q.stage)o.push(['info','Stage melintasi rel partisi. Saat ruangan dibagi, tiap sisi butuh stage sendiri.']);
   if(q.mode==='split'&&r.sideA!==r.sideB)o.push(['info',`Kapasitas sisi tidak sama (${r.sideA} dan ${r.sideB} meja) karena posisi buffet tidak simetris.`]);
@@ -567,6 +624,8 @@ function sync(){
   const gi=document.querySelector('input[data-k=gap]');gi.disabled=s.sp!=='custom';if(s.sp!=='custom'&&document.activeElement!==gi)gi.value=gapOf(s);
   document.querySelector('input[data-k=pc]').disabled=s.mode!=='split';
   ['sw','sd','sb','sf'].forEach(k=>document.querySelector(`input[data-k=${k}]`).disabled=!s.stage);
+  ['pnm','ppj','plb','pjs','pcm'].forEach(k=>document.querySelector(`input[data-k=${k}]`).disabled=!(s.stage&&s.prop));
+  document.querySelector('input[data-k=prop]').disabled=!s.stage;
   document.querySelector('input[data-k=bd]').disabled=s.buffet==='none';
   $('areaHint').textContent=`Luas ${nf(s.W*s.D,1)} m²`;
 }
@@ -608,14 +667,14 @@ document.querySelectorAll('.seg').forEach(sg=>sg.addEventListener('click',e=>{
 }));
 const planEl=$('plan');
 function clearHov(){hovIdx=-1;const l=planEl.querySelector('#hov');if(l)l.innerHTML='';planEl.style.cursor='';$('planHint').textContent=HINT;$('planHint').classList.remove('on')}
-const HINT='Arahkan kursor ke meja atau ke stage (di HP: ketuk) untuk melihat ukuran dan jaraknya ke sekeliling.';
+const HINT='Arahkan kursor ke meja, stage, atau properti (di HP: ketuk) untuk melihat ukuran dan jaraknya ke sekeliling.';
 function setHov(i){
   if(i===hovIdx)return;
   const l=planEl.querySelector('#hov');if(!l)return;
   const none=i===-1;
-  hovIdx=i;l.innerHTML=none?'':(i==='stage'?stageOverlay():hoverOverlay(i));
+  hovIdx=i;l.innerHTML=none?'':(i==='stage'?stageOverlay():i==='prop'?propOverlay():hoverOverlay(i));
   planEl.style.cursor=none?'':'pointer';
-  $('planHint').textContent=none?HINT:(i==='stage'?stageInfo():tableInfo(i));
+  $('planHint').textContent=none?HINT:(i==='stage'?stageInfo():i==='prop'?propInfo():tableInfo(i));
   $('planHint').classList.toggle('on',!none);
 }
 function planPoint(e){
@@ -624,7 +683,7 @@ function planPoint(e){
   const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
   return pt.matrixTransform(m.inverse());
 }
-function hitAny(px,py){return hitStage(px,py)?'stage':(v=>v<0?-1:v)(hitTable(px,py))}
+function hitAny(px,py){return hitStage(px,py)?'stage':hitProp(px,py)?'prop':(v=>v<0?-1:v)(hitTable(px,py))}
 planEl.addEventListener('mousemove',e=>{const p=planPoint(e);setHov(p?hitAny(p.x,p.y):-1)});
 planEl.addEventListener('mouseleave',clearHov);
 planEl.addEventListener('click',e=>{
