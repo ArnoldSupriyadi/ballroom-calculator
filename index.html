@@ -106,10 +106,11 @@ main{padding:0}
     <legend>Ruangan</legend>
     <div class="row one"><label class="f">Nama ruangan<input type="text" data-k="name" maxlength="60"></label></div>
     <div class="row">
-      <label class="f">Lebar (m)<input type="number" data-k="W" min="5" max="200" step="0.1"></label>
-      <label class="f">Panjang (m)<input type="number" data-k="D" min="5" max="200" step="0.1"></label>
+      <label class="f">Lebar (m)<input type="number" data-k="W" min="5" max="200" step="0.1" disabled></label>
+      <label class="f">Panjang (m)<input type="number" data-k="D" min="5" max="200" step="0.1" disabled></label>
     </div>
     <p class="hint" id="areaHint"></p>
+    <p class="hint">Ukuran ruangan dikunci sesuai denah Lt 3 dan tidak bisa diubah.</p>
     <div class="row one"><label class="f">Jalur keliling dari dinding (m)<input type="number" data-k="perim" min="0" max="10" step="0.1"></label></div>
     <label class="check"><input type="checkbox" data-k="pre"> Tampilkan elemen denah Lt 3 (pintu, kolom, ceruk)</label>
     <div class="row"><button type="button" id="btnReset">Kembalikan preset 25 × 26 m</button></div>
@@ -252,9 +253,9 @@ const nf=(v,d=1)=>Number(v).toLocaleString('id-ID',{minimumFractionDigits:0,maxi
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const C={ink:'#1C2B39',ink2:'#4F5F6E',rule:'#C9D1D6',accent:'#2F5D8A',accentBg:'#DCE7F1',table:'#E9CF8C',tableS:'#9C7A28',tableT:'#5E4712',chair:'#56687A',rail:'#B4432F',buf:'#3F7D5C',bufBg:'#E1EFE7',util:'#EEF1F1',guide:'#55E07E',guideT:'#1E7A45',pink:'#FF7FB6',pinkT:'#A81E5E',cyan:'#22D3EE',cyanT:'#0E7490',cyanBg:'#ECFEFF'};
 
-function grid(xs,W,top,D,m){const o=[];if(W<m||D<m)return o;const c=fl(W/m),r=fl(D/m);const x0=xs+(W-(c-1)*m)/2,y0=top+(D-(r-1)*m)/2;for(let j=0;j<r;j++)for(let i=0;i<c;i++)o.push([x0+i*m,y0+j*m]);return o}
-function hex(xs,W,top,D,m){const o=[];if(W<m||D<m)return o;const p=m,rp=m*Math.sqrt(3)/2;const n1=fl((W-m)/p)+1,n2=Math.max(0,fl((W-m-p/2)/p)+1),rows=fl((D-m)/rp)+1;const y0=top+(D-(rows-1)*rp)/2;const span=n2<n1?(n1-1)*p:(n1-1)*p+p/2;const x0=xs+(W-span)/2;for(let j=0;j<rows;j++){const f=j%2===0,n=f?n1:n2,off=f?0:p/2;for(let i=0;i<n;i++)o.push([x0+off+i*p,y0+j*rp])}return o}
-function place(xs,W,top,D,m,pat){return pat==='grid'?{l:grid(xs,W,top,D,m),n:'Grid lurus'}:{l:hex(xs,W,top,D,m),n:'Zig-zag'}}
+function grid(xs,W,top,D,m,d){const o=[];if(W<d||D<d)return o;const c=fl((W-d)/m)+1,r=fl((D-d)/m)+1;const x0=xs+(W-(c-1)*m)/2,y0=top+(D-(r-1)*m)/2;for(let j=0;j<r;j++)for(let i=0;i<c;i++)o.push([x0+i*m,y0+j*m]);return o}
+function hex(xs,W,top,D,m,d){const o=[];if(W<d||D<d)return o;const p=m,rp=m*Math.sqrt(3)/2;const n1=fl((W-d)/p)+1,n2=Math.max(0,fl((W-d-p/2)/p)+1),rows=fl((D-d)/rp)+1;const y0=top+(D-(rows-1)*rp)/2;const span=n2<n1?(n1-1)*p:(n1-1)*p+p/2;const x0=xs+(W-span)/2;for(let j=0;j<rows;j++){const f=j%2===0,n=f?n1:n2,off=f?0:p/2;for(let i=0;i<n;i++)o.push([x0+off+i*p,y0+j*rp])}return o}
+function place(xs,W,top,D,m,pat,d){return pat==='grid'?{l:grid(xs,W,top,D,m,d),n:'Grid lurus'}:{l:hex(xs,W,top,D,m,d),n:'Zig-zag'}}
 function chairsFor(dcm,cw){return Math.max(2,2*Math.round(Math.PI*dcm/cw/2))}
 function guidePair(r){
   if(r.tables.length<2)return null;
@@ -301,12 +302,12 @@ function compute(over){
   if(q.mode==='split'){
     const c=q.W/2,wl=Math.max(0,c-q.pc-x1),wr=Math.max(0,x2-(c+q.pc));
     zones=[[x1,y1,wl,Dz],[c+q.pc,y1,wr,Dz]];
-    const a=place(x1,wl,y1,Dz,m,q.pat),b=place(q.W-x2,wr,y1,Dz,m,q.pat);
+    const a=place(x1,wl,y1,Dz,m,q.pat,d),b=place(q.W-x2,wr,y1,Dz,m,q.pat,d);
     tables=a.l.concat(b.l.map(([x,y])=>[q.W-x,y]));
     sideA=a.l.length;sideB=b.l.length;pname=a.n===b.n?a.n:a.n+' / '+b.n;
   }else{
     const w=Math.max(0,x2-x1);zones=[[x1,y1,w,Dz]];
-    const a=place(x1,w,y1,Dz,m,q.pat);tables=a.l;pname=a.n;
+    const a=place(x1,w,y1,Dz,m,q.pat,d);tables=a.l;pname=a.n;
   }
   const n=q.chairs>0?Math.round(q.chairs):chairsFor(q.dia,q.cw);
   const geo=presetGeo(q.W,q.D),counters=[],clears=[];
@@ -337,17 +338,17 @@ const t=(x,y,str,o={})=>`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anch
 const ln=(a,b,c,d,col=C.ink2,w=0.6,dash='')=>`<line x1="${a.toFixed(1)}" y1="${b.toFixed(1)}" x2="${c.toFixed(1)}" y2="${d.toFixed(1)}" stroke="${col}" stroke-width="${w}" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
 let PV=null,hovIdx=-1;
 
-function svgPlan(r){
+function svgPlan(r,opt){
+  const ex=!!(opt&&opt.ex);
   const q=r.q,W=q.W,D=q.D;
   const S=Math.min(640/W,640/D);
   const L=70,T=50,R=100;
   const pw=W*S,ph=D*S;
   const vw=Math.max(L+pw+R,640);
-  const tbY=T+ph+(q.pre?92:60)+(q.guide?140:(r.prop?34:0));
+  const tbY=T+ph+(q.pre?92:60)+(ex?0:(q.guide?140:(r.prop?34:0)));
   const vh=tbY+200;
   const X=v=>L+v*S,Y=v=>T+v*S;
   const dimH=(a,b,y,lab)=>ln(a,y,b,y)+ln(a,y-4,a,y+4)+ln(b,y-4,b,y+4)+t((a+b)/2,y+13,lab,{w:600,c:C.ink});
-  const dimV=(x,a,b,lab)=>(b-a<2?'':ln(x,a,x,b)+ln(x-4,a,x+4,a)+ln(x-4,b,x+4,b)+(b-a>12?t(x+8,(a+b)/2,lab,{a:'start'}):''));
   let g='';
   r.zones.forEach(([zx,zy,zw,zh])=>{if(zw>0&&zh>0)g+=`<rect x="${X(zx)}" y="${Y(zy)}" width="${zw*S}" height="${zh*S}" fill="none" stroke="${C.rule}" stroke-width="1" stroke-dasharray="5 4"/>`});
   r.counters.forEach(c=>{
@@ -396,7 +397,7 @@ function svgPlan(r){
     g+=`<circle cx="${X(cx).toFixed(1)}" cy="${Y(cy).toFixed(1)}" r="${(r.d/2*S).toFixed(1)}" fill="${C.table}" stroke="${C.tableS}" stroke-width="0.8"/>`;
     if(q.nums&&r.d*S>16)g+=t(X(cx),Y(cy),String(i+1),{s:11,c:C.tableT});
   });
-  if(q.guide){
+  if(q.guide&&!ex){
     const gp=guidePair(r);
     if(gp){
       // garis ukur di denah: tepi meja ke tepi meja, angkanya ada di diagram panduan
@@ -422,16 +423,24 @@ function svgPlan(r){
   const dy=T+ph+(q.pre?60:30);
   g+=dimH(X(0),X(W),dy,`${nf(W)} m`);
   const dx=X(W)+(q.pre?48:24);
-  const bottomTop=r.bb?q.D-q.perim-q.bd:q.D-q.perim;
-  g+=dimV(dx,Y(0),Y(r.top),`${nf(r.top)} m`);
-  g+=dimV(dx,Y(r.top),Y(bottomTop),`${nf(Math.max(0,bottomTop-r.top))} m`);
-  g+=dimV(dx,Y(bottomTop),Y(D),`${nf(D-bottomTop)} m`);
+  // hanya kedalaman total, tanpa rincian per bagian
+  g+=ln(dx,Y(0),dx,Y(D))+ln(dx-4,Y(0),dx+4,Y(0))+ln(dx-4,Y(D),dx+4,Y(D));
   g+=t(dx,T-12,`${nf(D)} m`,{w:600,c:C.ink});
+  if(ex&&r.prop&&q.stage){
+    const sy=Y(q.sb+q.sd),py=Y(r.prop.y0),mx=X(W/2),my=(sy+py)/2;
+    g+=ln(mx,sy,mx,py,C.cyan,2,'5 4')+ln(mx-8,sy,mx+8,sy,C.cyan,2)+ln(mx-8,py,mx+8,py,C.cyan,2);
+    const pn=(q.pnm||'').trim(),lab=`stage ke ${pn&&pn.toLowerCase()!=='properti'?pn:'properti'} ${nf(r.prop.y0-q.sb-q.sd,2)} m`;
+    // keterangan ditarik ke luar barisan properti supaya tidak menimpa kotaknya
+    const half=chipW(lab,11)/2,edge=X(r.prop.pieces[r.prop.pieces.length-1][1]);
+    const cx2=Math.min(vw-half-6,edge+12+half);
+    g+=ln(mx,my,cx2-half,my,C.cyan,0.8,'3 3');
+    g+=chip(cx2,my,lab,{stroke:C.cyan,c:C.cyanT,s:11});
+  }
   const propNote=r.prop?(()=>{const nm=(q.pnm||'').trim();
     return nm&&nm.toLowerCase()!=='properti'
       ? `Kotak garis putus-putus cyan adalah ${nm}, properti yang berdiri di depan stage.`
       : 'Kotak garis putus-putus cyan adalah properti yang berdiri di depan stage.';})():'';
-  if(q.guide){
+  if(q.guide&&!ex){
     // diagram panduan: dua meja bersebelahan dengan kedua ukurannya
     const iy=dy+26,x0=28,dp=54,rr=dp/2,gp2=Math.max(20,Math.min(150,dp*r.gap/r.d));
     const cA=x0+rr,cB=cA+dp+gp2,cy=iy+72,ay=cy-rr-20,tx2=Math.max(cB+rr+34,230);
@@ -451,7 +460,7 @@ function svgPlan(r){
       g+=ln(tx2,cy+46,tx2+26,cy+46,C.cyan,2,'6 4');
       g+=t(tx2+34,cy+46,propNote,{a:'start',s:11,c:C.ink});
     }
-  }else if(r.prop){
+  }else if(r.prop&&!ex){
     const ly=dy+30;
     g+=ln(28,ly,54,ly,C.cyan,2,'6 4');
     g+=t(62,ly,propNote,{a:'start',s:11,c:C.ink});
@@ -471,7 +480,7 @@ function svgPlan(r){
   rowsR.forEach(([k,v],i)=>{const y=tbY+64+i*22;g+=t(tx+colW+14,y,k,{a:'start'})+t(tx+colW+14+lab,y,v,{a:'start',c:C.ink,w:500})});
 
   const psw=Math.min(q.sw,W);
-  PV={S,L,T,W,D,tables:r.tables,d:r.d,m:r.m,gap:r.gap,n:r.n,aisle:r.aisle,showCh:q.showCh,vw,
+  if(!ex)PV={S,L,T,W,D,tables:r.tables,d:r.d,m:r.m,gap:r.gap,n:r.n,aisle:r.aisle,showCh:q.showCh,vw,
       stage:q.stage,sw:psw,sx:(W-psw)/2,sb:q.sb,sd:q.sd,top:r.top,prop:r.prop,pnm:q.pnm||'Properti'};
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${vw.toFixed(0)} ${vh.toFixed(0)}" font-family="Archivo, Arial, sans-serif" role="img" aria-label="Denah ${esc(q.name)}: ${r.tables.length} meja, ${r.pax} pax"><rect width="100%" height="100%" fill="#fff"/>${g}<g id="hov"></g></svg>`;
 }
@@ -714,23 +723,25 @@ planEl.addEventListener('click',e=>{
   const i=hitAny(p.x,p.y);
   if(i===-1||i===hovIdx)clearHov();else{hovIdx=-1;setHov(i)}
 });
-window.addEventListener('beforeprint',clearHov);
+window.addEventListener('beforeprint',()=>{clearHov();$('plan').innerHTML=svgPlan(compute({}),{ex:true})});
+window.addEventListener('afterprint',render);
 $('btnReset').addEventListener('click',()=>{s={...DEF};render();flash('Preset dikembalikan')});
 $('btnPrint').addEventListener('click',()=>window.print());
 $('btnCopy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('blurb').value);flash('Teks disalin')}catch(e){$('blurb').select();flash('Tekan Ctrl+C untuk menyalin')}});
 $('btnLink').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(location.href);flash('Tautan disalin')}catch(e){flash('Salin tautan dari address bar')}});
 $('btnPng').addEventListener('click',()=>{
   clearHov();
-  const svg=$('plan').querySelector('svg');if(!svg)return;
-  const vb=svg.viewBox.baseVal,sc=2;
+  const str=svgPlan(compute({}),{ex:true});
+  const vb=str.match(/viewBox="0 0 (\d+) (\d+)"/);if(!vb)return;
+  const sc=2;
   const img=new Image();
-  img.onload=()=>{const c=document.createElement('canvas');c.width=vb.width*sc;c.height=vb.height*sc;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);
+  img.onload=()=>{const c=document.createElement('canvas');c.width=+vb[1]*sc;c.height=+vb[2]*sc;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);
     c.toBlob(b=>{if(!b){flash('Gagal membuat PNG');return}const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`layout-${(s.name||'ballroom').toLowerCase().replace(/[^a-z0-9]+/g,'-')}-${s.dia}cm.png`;document.body.appendChild(a);a.click();a.remove();flash('PNG diunduh')},'image/png')};
   img.onerror=()=>flash('Gagal membuat PNG');
-  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(svg));
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(str);
 });
 
-(function(){try{const p=new URLSearchParams(location.hash.slice(1));for(const [k,v] of p){if(!(k in DEF))continue;if(typeof DEF[k]==='number'){const n=parseFloat(v);if(!isNaN(n))s[k]=n}else s[k]=v}if(s.pat!=='zig'&&s.pat!=='grid')s.pat='zig';}catch(e){}render()})();
+(function(){try{const p=new URLSearchParams(location.hash.slice(1));for(const [k,v] of p){if(!(k in DEF)||k==='W'||k==='D')continue;if(typeof DEF[k]==='number'){const n=parseFloat(v);if(!isNaN(n))s[k]=n}else s[k]=v}if(s.pat!=='zig'&&s.pat!=='grid')s.pat='zig';}catch(e){}render()})();
 </script>
 </body>
 </html>
