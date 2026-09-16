@@ -336,19 +336,6 @@ function compute(over){
 const t=(x,y,str,o={})=>`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${o.a||'middle'}" dominant-baseline="central" font-size="${o.s||12}" font-weight="${o.w||400}" fill="${o.c||C.ink2}">${esc(str)}</text>`;
 const ln=(a,b,c,d,col=C.ink2,w=0.6,dash='')=>`<line x1="${a.toFixed(1)}" y1="${b.toFixed(1)}" x2="${c.toFixed(1)}" y2="${d.toFixed(1)}" stroke="${col}" stroke-width="${w}" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
 let PV=null,hovIdx=-1;
-function propNameTags(prop,nm,X,Y,S,W){
-  const ph=(prop.y1-prop.y0)*S,cy=Y((prop.y0+prop.y1)/2),tw=nm.length*5.6+8;
-  let o='';
-  prop.pieces.forEach(([a,b],i)=>{
-    const pw=(b-a)*S,left=i===0;
-    if(ph>15&&pw>46){o+=t(X((a+b)/2),cy,nm,{w:600,c:C.cyanT,s:11});return}
-    const room=left?a*S:(W-b)*S;
-    o+=room>tw+10
-      ? t(left?X(a)-7:X(b)+7,cy,nm,{a:left?'end':'start',w:600,c:C.cyanT,s:11})
-      : t(X((a+b)/2),Y(prop.y0)-9,nm,{w:600,c:C.cyanT,s:11});
-  });
-  return o;
-}
 
 function svgPlan(r){
   const q=r.q,W=q.W,D=q.D;
@@ -356,7 +343,7 @@ function svgPlan(r){
   const L=70,T=50,R=100;
   const pw=W*S,ph=D*S;
   const vw=Math.max(L+pw+R,640);
-  const tbY=T+ph+(q.pre?92:60)+(q.guide?140:0);
+  const tbY=T+ph+(q.pre?92:60)+(q.guide?140:(r.prop?34:0));
   const vh=tbY+200;
   const X=v=>L+v*S,Y=v=>T+v*S;
   const dimH=(a,b,y,lab)=>ln(a,y,b,y)+ln(a,y-4,a,y+4)+ln(b,y-4,b,y+4)+t((a+b)/2,y+13,lab,{w:600,c:C.ink});
@@ -390,7 +377,6 @@ function svgPlan(r){
     P.pieces.forEach(([a,b])=>{
       g+=`<rect x="${X(a).toFixed(1)}" y="${Y(P.y0).toFixed(1)}" width="${((b-a)*S).toFixed(1)}" height="${ph2.toFixed(1)}" rx="5" fill="${C.cyanBg}" stroke="${C.cyan}" stroke-width="2" stroke-dasharray="6 4"/>`;
     });
-    g+=propNameTags(P,q.pnm||'Properti',X,Y,S,W);
   }
   if(q.pre){
     const G0=r.geo;
@@ -441,6 +427,10 @@ function svgPlan(r){
   g+=dimV(dx,Y(r.top),Y(bottomTop),`${nf(Math.max(0,bottomTop-r.top))} m`);
   g+=dimV(dx,Y(bottomTop),Y(D),`${nf(D-bottomTop)} m`);
   g+=t(dx,T-12,`${nf(D)} m`,{w:600,c:C.ink});
+  const propNote=r.prop?(()=>{const nm=(q.pnm||'').trim();
+    return nm&&nm.toLowerCase()!=='properti'
+      ? `Kotak garis putus-putus cyan adalah ${nm}, properti yang berdiri di depan stage.`
+      : 'Kotak garis putus-putus cyan adalah properti yang berdiri di depan stage.';})():'';
   if(q.guide){
     // diagram panduan: dua meja bersebelahan dengan kedua ukurannya
     const iy=dy+26,x0=28,dp=54,rr=dp/2,gp2=Math.max(20,Math.min(150,dp*r.gap/r.d));
@@ -457,6 +447,14 @@ function svgPlan(r){
     g+=ln(tx2,cy+10,tx2+26,cy+10,C.pink,1.2,'5 4');
     g+=t(tx2+34,cy+10,`Jarak tengah ke tengah ${nf(r.m,2)} m — jatah ruang yang dipakai satu meja: diameter ${nf(r.d,2)} m + jarak antar meja ${nf(r.gap)} m.`,{a:'start',s:11,c:C.ink});
     g+=t(tx2+34,cy+28,'Jarak antar meja sudah termasuk kursi kedua meja yang saling membelakangi.',{a:'start',s:11});
+    if(r.prop){
+      g+=ln(tx2,cy+46,tx2+26,cy+46,C.cyan,2,'6 4');
+      g+=t(tx2+34,cy+46,propNote,{a:'start',s:11,c:C.ink});
+    }
+  }else if(r.prop){
+    const ly=dy+30;
+    g+=ln(28,ly,54,ly,C.cyan,2,'6 4');
+    g+=t(62,ly,propNote,{a:'start',s:11,c:C.ink});
   }
 
   const tx=20,tw=vw-40,colW=tw/2;
@@ -554,7 +552,6 @@ function propOverlay(){
   g.pieces.forEach(([a,b])=>{
     o+=`<rect x="${X(a).toFixed(1)}" y="${y1.toFixed(1)}" width="${((b-a)*P.S).toFixed(1)}" height="${(y2-y1).toFixed(1)}" rx="5" fill="${C.cyanBg}" stroke="${C.cyan}" stroke-width="3" stroke-dasharray="6 4"/>`;
   });
-  o+=propNameTags(g,P.pnm,X,Y,P.S,P.W);
   const vx=X((f[0]+f[1])/2);
   o+=vMeas(vx,Y(P.sb+P.sd),y1,g.y0-P.sb-P.sd,C.cyan,C.cyanT);
   o+=vMeas(vx,y2,Y(P.top),P.top-g.y1,C.cyan,C.cyanT);
