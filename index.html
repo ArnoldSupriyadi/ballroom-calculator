@@ -342,7 +342,7 @@ function svgPlan(r,opt){
   const ex=!!(opt&&opt.ex);
   const q=r.q,W=q.W,D=q.D;
   const S=Math.min(640/W,640/D);
-  const L=70,T=50,R=100;
+  const L=70,T=50,R=ex?300:100;
   const pw=W*S,ph=D*S;
   const vw=Math.max(L+pw+R,640);
   const tbY=T+ph+(q.pre?92:60)+(ex?0:(q.guide?140:(r.prop?34:0)));
@@ -426,15 +426,27 @@ function svgPlan(r,opt){
   // hanya kedalaman total, tanpa rincian per bagian
   g+=ln(dx,Y(0),dx,Y(D))+ln(dx-4,Y(0),dx+4,Y(0))+ln(dx-4,Y(D),dx+4,Y(D));
   g+=t(dx,T-12,`${nf(D)} m`,{w:600,c:C.ink});
-  if(ex&&r.prop&&q.stage){
-    const sy=Y(q.sb+q.sd),py=Y(r.prop.y0),mx=X(W/2),my=(sy+py)/2;
-    g+=ln(mx,sy,mx,py,C.cyan,2,'5 4')+ln(mx-8,sy,mx+8,sy,C.cyan,2)+ln(mx-8,py,mx+8,py,C.cyan,2);
-    const pn=(q.pnm||'').trim(),lab=`stage ke ${pn&&pn.toLowerCase()!=='properti'?pn:'properti'} ${nf(r.prop.y0-q.sb-q.sd,2)} m`;
-    // keterangan ditarik ke luar barisan properti supaya tidak menimpa kotaknya
-    const half=chipW(lab,11)/2,edge=X(r.prop.pieces[r.prop.pieces.length-1][1]);
-    const cx2=Math.min(vw-half-6,edge+12+half);
-    g+=ln(mx,my,cx2-half,my,C.cyan,0.8,'3 3');
-    g+=chip(cx2,my,lab,{stroke:C.cyan,c:C.cyanT,s:11});
+  if(ex&&q.stage){
+    // rantai ukuran dari dinding atas sampai baris meja, digambar di margin kanan
+    const pn=(q.pnm||'').trim(),PN=pn&&pn.toLowerCase()!=='properti'?pn:'properti';
+    const segs=[[0,q.sb,'dinding atas ke stage'],[q.sb,q.sb+q.sd,'stage']];
+    if(r.prop){
+      segs.push([q.sb+q.sd,r.prop.y0,`stage ke ${PN}`]);
+      segs.push([r.prop.y0,r.prop.y1,PN]);
+      segs.push([r.prop.y1,r.top,`${PN} ke baris meja`]);
+    }else segs.push([q.sb+q.sd,r.top,'stage ke baris meja']);
+    const cx=X(W)+(q.pre?48:24)+52;
+    let lastY=-1e9;
+    segs.forEach(([a,b])=>{if(b-a<0.05)return;
+      g+=ln(X(W),Y(a),cx,Y(a),C.rule,0.6,'3 3')+ln(X(W),Y(b),cx,Y(b),C.rule,0.6,'3 3')});
+    segs.forEach(([a,b,lab])=>{
+      if(b-a<0.05)return;
+      const ya=Y(a),yb=Y(b),mid=(ya+yb)/2;
+      g+=ln(cx,ya,cx,yb,C.cyan,1.8,'5 4')+ln(cx-5,ya,cx+5,ya,C.cyan,1.8)+ln(cx-5,yb,cx+5,yb,C.cyan,1.8);
+      let ty=mid;if(ty<lastY+15)ty=lastY+15;lastY=ty;
+      if(Math.abs(ty-mid)>3)g+=ln(cx+3,mid,cx+9,ty,C.cyan,0.6);
+      g+=t(cx+13,ty,`${nf(b-a,2)} m · ${lab}`,{a:'start',s:11,w:600,c:C.cyanT});
+    });
   }
   const propNote=r.prop?(()=>{const nm=(q.pnm||'').trim();
     return nm&&nm.toLowerCase()!=='properti'
