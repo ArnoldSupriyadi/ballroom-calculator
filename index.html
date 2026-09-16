@@ -229,7 +229,7 @@ const $=id=>document.getElementById(id);
 const fl=v=>Math.floor(v+1e-9);
 const nf=(v,d=1)=>Number(v).toLocaleString('id-ID',{minimumFractionDigits:0,maximumFractionDigits:d});
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const C={ink:'#1C2B39',ink2:'#4F5F6E',rule:'#C9D1D6',accent:'#2F5D8A',accentBg:'#DCE7F1',table:'#E9CF8C',tableS:'#9C7A28',tableT:'#5E4712',chair:'#56687A',rail:'#B4432F',buf:'#3F7D5C',bufBg:'#E1EFE7',util:'#EEF1F1',guide:'#55E07E',guideT:'#1E7A45'};
+const C={ink:'#1C2B39',ink2:'#4F5F6E',rule:'#C9D1D6',accent:'#2F5D8A',accentBg:'#DCE7F1',table:'#E9CF8C',tableS:'#9C7A28',tableT:'#5E4712',chair:'#56687A',rail:'#B4432F',buf:'#3F7D5C',bufBg:'#E1EFE7',util:'#EEF1F1',guide:'#55E07E',guideT:'#1E7A45',pink:'#FF7FB6',pinkT:'#A81E5E'};
 
 function grid(xs,W,top,D,m){const o=[];if(W<m||D<m)return o;const c=fl(W/m),r=fl(D/m);const x0=xs+(W-(c-1)*m)/2,y0=top+(D-(r-1)*m)/2;for(let j=0;j<r;j++)for(let i=0;i<c;i++)o.push([x0+i*m,y0+j*m]);return o}
 function hex(xs,W,top,D,m){const o=[];if(W<m||D<m)return o;const p=m,rp=m*Math.sqrt(3)/2;const n1=fl((W-m)/p)+1,n2=Math.max(0,fl((W-m-p/2)/p)+1),rows=fl((D-m)/rp)+1;const y0=top+(D-(rows-1)*rp)/2;const span=n2<n1?(n1-1)*p:(n1-1)*p+p/2;const x0=xs+(W-span)/2;for(let j=0;j<rows;j++){const f=j%2===0,n=f?n1:n2,off=f?0:p/2;for(let i=0;i<n;i++)o.push([x0+off+i*p,y0+j*rp])}return o}
@@ -398,12 +398,12 @@ function svgPlan(r){
     [cA,cB].forEach(cx=>{g+=`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${rr}" fill="${C.table}" stroke="${C.tableS}" stroke-width="0.8"/>`+t(cx,cy,`Ø ${nf(r.d,2)}`,{s:10,c:C.tableT})});
     g+=ln(cA+rr,cy,cB-rr,cy,C.guide,2,'5 4')+ln(cA+rr,cy-11,cA+rr,cy+11,C.guide,2)+ln(cB-rr,cy-11,cB-rr,cy+11,C.guide,2);
     g+=t((cA+cB)/2,cy+rr+15,`${nf(r.gap)} m`,{s:11,w:700,c:C.guideT});
-    g+=ln(cA,cy-rr,cA,ay,C.guide,0.8,'3 3')+ln(cB,cy-rr,cB,ay,C.guide,0.8,'3 3');
-    g+=ln(cA,ay,cB,ay,C.guide,1.2,'5 4')+ln(cA,ay-6,cA,ay+6,C.guide,1.2)+ln(cB,ay-6,cB,ay+6,C.guide,1.2);
-    g+=t((cA+cB)/2,ay-11,`${nf(r.m,2)} m`,{s:11,w:600,c:C.guideT});
+    g+=ln(cA,cy-rr,cA,ay,C.pink,0.8,'3 3')+ln(cB,cy-rr,cB,ay,C.pink,0.8,'3 3');
+    g+=ln(cA,ay,cB,ay,C.pink,1.2,'5 4')+ln(cA,ay-6,cA,ay+6,C.pink,1.2)+ln(cB,ay-6,cB,ay+6,C.pink,1.2);
+    g+=t((cA+cB)/2,ay-11,`${nf(r.m,2)} m`,{s:11,w:700,c:C.pinkT});
     g+=ln(tx2,cy-14,tx2+26,cy-14,C.guide,2,'5 4');
     g+=t(tx2+34,cy-14,`Jarak antar meja ${nf(r.gap)} m — diukur dari tepi meja ke tepi meja. Angka inilah yang kamu atur di panel.`,{a:'start',s:11,c:C.ink});
-    g+=ln(tx2,cy+10,tx2+26,cy+10,C.guide,1.2,'5 4');
+    g+=ln(tx2,cy+10,tx2+26,cy+10,C.pink,1.2,'5 4');
     g+=t(tx2+34,cy+10,`Jarak as ke as ${nf(r.m,2)} m — dari titik tengah ke titik tengah, yaitu diameter ${nf(r.d,2)} m + jarak antar meja ${nf(r.gap)} m.`,{a:'start',s:11,c:C.ink});
     g+=t(tx2+34,cy+28,'Jarak antar meja sudah termasuk kursi kedua meja yang saling membelakangi.',{a:'start',s:11});
   }
