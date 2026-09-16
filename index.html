@@ -124,13 +124,13 @@ main{padding:0}
   </fieldset>
 
   <fieldset>
-    <legend>Panggung</legend>
-    <label class="check"><input type="checkbox" data-k="stage"> Pakai panggung di sisi depan</label>
+    <legend>Stage</legend>
+    <label class="check"><input type="checkbox" data-k="stage"> Pakai stage di sisi depan</label>
     <div class="row">
       <label class="f">Lebar (m)<input type="number" data-k="sw" min="1" max="100" step="0.1"></label>
       <label class="f">Kedalaman (m)<input type="number" data-k="sd" min="1" max="30" step="0.1"></label>
     </div>
-    <div class="row one"><label class="f">Ruang kosong depan panggung (m)<input type="number" data-k="sf" min="0" max="30" step="0.1"></label></div>
+    <div class="row one"><label class="f">Ruang kosong depan stage (m)<input type="number" data-k="sf" min="0" max="30" step="0.1"></label></div>
   </fieldset>
 
   <fieldset>
@@ -173,11 +173,10 @@ main{padding:0}
     <p class="hint">Biarkan kursi per meja di angka 0, nanti jumlahnya dihitung otomatis dari keliling meja. Ruang 60 cm per kursi terasa lega, 50 cm sudah cukup rapat.</p>
     <p class="seglabel">Pola susunan</p>
     <div class="seg" data-k="pat" role="group" aria-label="Pola susunan">
-      <button type="button" data-v="auto">Otomatis</button>
       <button type="button" data-v="zig">Zig-zag</button>
       <button type="button" data-v="grid">Grid lurus</button>
     </div>
-    <p class="hint">Pilih Otomatis kalau ingin memakai pola yang muat meja paling banyak.</p>
+    <p class="hint">Zig-zag menggeser baris genap setengah langkah sehingga muat lebih banyak meja. Grid lurus menyusun meja sejajar baris dan kolom, lebih rapi tetapi mejanya lebih sedikit.</p>
   </fieldset>
 
   <fieldset>
@@ -200,7 +199,7 @@ main{padding:0}
   <ul class="notes" id="notes"></ul>
 
   <h2>Perbandingan ukuran meja</h2>
-  <p class="lead">Dihitung dengan ukuran ruangan, panggung, buffet, pola, dan lebar kursi yang sedang dipilih. Sel berwarna adalah skenario aktif.</p>
+  <p class="lead">Dihitung dengan ukuran ruangan, stage, buffet, pola, dan lebar kursi yang sedang dipilih. Sel berwarna adalah skenario aktif.</p>
   <div class="tablewrap"><table id="cmp"></table></div>
 
   <h2>Teks keterangan</h2>
@@ -218,7 +217,7 @@ main{padding:0}
 </footer>
 
 <script>
-const DEF={name:'Ballroom Lantai 3',W:25,D:26,perim:1.5,pre:1,mode:'single',pc:1.5,stage:1,sw:10,sd:4,sf:2,buffet:'none',bd:3.5,dia:180,sp:'std',gap:1.8,cw:60,chairs:0,pat:'auto',nums:1,showCh:1};
+const DEF={name:'Ballroom Lantai 3',W:25,D:26,perim:1.5,pre:1,mode:'single',pc:1.5,stage:1,sw:10,sd:4,sf:2,buffet:'none',bd:3.5,dia:180,sp:'std',gap:1.8,cw:60,chairs:0,pat:'zig',nums:1,showCh:1};
 let s={...DEF};
 const $=id=>document.getElementById(id);
 const fl=v=>Math.floor(v+1e-9);
@@ -228,7 +227,7 @@ const C={ink:'#1C2B39',ink2:'#4F5F6E',rule:'#C9D1D6',accent:'#2F5D8A',accentBg:'
 
 function grid(xs,W,top,D,m){const o=[];if(W<m||D<m)return o;const c=fl(W/m),r=fl(D/m);const x0=xs+(W-(c-1)*m)/2,y0=top+(D-(r-1)*m)/2;for(let j=0;j<r;j++)for(let i=0;i<c;i++)o.push([x0+i*m,y0+j*m]);return o}
 function hex(xs,W,top,D,m){const o=[];if(W<m||D<m)return o;const p=m,rp=m*Math.sqrt(3)/2;const n1=fl((W-m)/p)+1,n2=Math.max(0,fl((W-m-p/2)/p)+1),rows=fl((D-m)/rp)+1;const y0=top+(D-(rows-1)*rp)/2;const span=n2<n1?(n1-1)*p:(n1-1)*p+p/2;const x0=xs+(W-span)/2;for(let j=0;j<rows;j++){const f=j%2===0,n=f?n1:n2,off=f?0:p/2;for(let i=0;i<n;i++)o.push([x0+off+i*p,y0+j*rp])}return o}
-function place(xs,W,top,D,m,pat){const z=hex(xs,W,top,D,m),g=grid(xs,W,top,D,m);if(pat==='zig')return{l:z,n:'Zig-zag'};if(pat==='grid')return{l:g,n:'Grid lurus'};return z.length>=g.length?{l:z,n:'Zig-zag'}:{l:g,n:'Grid lurus'}}
+function place(xs,W,top,D,m,pat){return pat==='grid'?{l:grid(xs,W,top,D,m),n:'Grid lurus'}:{l:hex(xs,W,top,D,m),n:'Zig-zag'}}
 function chairsFor(dcm,cw){return Math.max(2,2*Math.round(Math.PI*dcm/cw/2))}
 const DOOR_CLR=0.75;
 function presetGeo(W,D){return{
@@ -326,7 +325,7 @@ function svgPlan(r){
   if(q.stage){
     const sw=Math.min(q.sw,W),sx=(W-sw)/2;
     g+=`<rect x="${X(sx)}" y="${Y(q.perim)}" width="${sw*S}" height="${q.sd*S}" rx="4" fill="${C.accentBg}" stroke="${C.accent}" stroke-width="1"/>`;
-    if(q.sd*S>34){g+=t(X(W/2),Y(q.perim+q.sd/2)-8,'Panggung / pelaminan',{w:600,c:C.accent})+t(X(W/2),Y(q.perim+q.sd/2)+8,`${nf(sw)} × ${nf(q.sd)} m`,{c:C.accent})}
+    if(q.sd*S>34){g+=t(X(W/2),Y(q.perim+q.sd/2)-8,'Stage',{w:600,c:C.accent})+t(X(W/2),Y(q.perim+q.sd/2)+8,`${nf(sw)} × ${nf(q.sd)} m`,{c:C.accent})}
   }
   if(q.pre){
     const G0=r.geo;
@@ -370,7 +369,7 @@ function svgPlan(r){
   g+=t(dx,T-12,`${nf(D)} m`,{w:600,c:C.ink});
 
   const tx=20,tw=vw-40,colW=tw/2;
-  const rowsL=[['Luas',`${nf(W*D,1)} m²`],['Dimensi',`${nf(W)} × ${nf(D)} m`],['Mode ruang',q.mode==='split'?`Dibagi 2 @ ${nf(W*D/2,1)} m²`:'Satu hall'],['Tipe layout',`Round table, ${r.pname.toLowerCase()}`],['Panggung',q.stage?`${nf(Math.min(q.sw,W))} × ${nf(q.sd)} m`:'Tidak ada'],['Buffet',q.buffet==='none'?'Tidak ada':`${{back:'Belakang',left:'Kiri',right:'Kanan',both:'Kiri dan kanan'}[q.buffet]}, ±${nf(r.counterLen)} m meja`]];
+  const rowsL=[['Luas',`${nf(W*D,1)} m²`],['Dimensi',`${nf(W)} × ${nf(D)} m`],['Mode ruang',q.mode==='split'?`Dibagi 2 @ ${nf(W*D/2,1)} m²`:'Satu hall'],['Tipe layout',`Round table, ${r.pname.toLowerCase()}`],['Stage',q.stage?`${nf(Math.min(q.sw,W))} × ${nf(q.sd)} m`:'Tidak ada'],['Buffet',q.buffet==='none'?'Tidak ada':`${{back:'Belakang',left:'Kiri',right:'Kanan',both:'Kiri dan kanan'}[q.buffet]}, ±${nf(r.counterLen)} m meja`]];
   const rowsR=[['Meja',`${r.tables.length} meja Ø ${q.dia} cm`+(r.sideA!==null?` (${r.sideA} + ${r.sideB})`:'')],['Kursi per meja',`${r.n} kursi`],['Kapasitas',`${nf(r.pax,0)} pax`+(r.sideA!==null?` (${r.sideA*r.n} + ${r.sideB*r.n})`:'')],['Luas per pax',r.pax?`${nf(W*D/r.pax,2)} m² bruto`:'-'],['Jarak as meja',`${nf(r.m,2)} m`],['Jalur keliling',`${nf(q.perim)} m`]];
   g+=`<rect x="${tx}" y="${tbY}" width="${tw}" height="186" fill="#fff" stroke="${C.ink}" stroke-width="1.5"/>`;
   g+=ln(tx,tbY+46,tx+tw,tbY+46,C.ink,1)+ln(tx+colW,tbY+46,tx+colW,tbY+186,C.rule,1);
@@ -387,18 +386,18 @@ function svgPlan(r){
 
 function notes(r){
   const q=r.q,o=[];
-  if(r.tables.length===0)o.push(['bad','Zona meja terlalu kecil untuk ukuran meja ini. Kecilkan jalur, panggung, atau zona buffet.']);
+  if(r.tables.length===0)o.push(['bad','Zona meja terlalu kecil untuk ukuran meja ini. Kecilkan jalur, stage, atau zona buffet.']);
   if(r.aisle<0.6)o.push(['bad',`Jalur antar sandaran hanya ±${nf(Math.max(0,r.aisle),2)} m. Tamu akan sulit lewat saat semua kursi terisi.`]);
   else if(r.aisle<0.9)o.push(['warn',`Jalur antar sandaran ±${nf(r.aisle,2)} m. Cukup untuk tamu, sempit untuk waiter. Plated service idealnya ±0,9–1,2 m.`]);
   if(r.pax&&q.W*q.D/r.pax<1.2)o.push(['warn',`Kepadatan ${nf(q.W*q.D/r.pax,2)} m²/pax tergolong tinggi untuk round table. Cek ulang dengan pengelola gedung.`]);
   if(q.chairs>0){const auto=chairsFor(q.dia,q.cw);if(q.chairs>auto)o.push(['warn',`${q.chairs} kursi melebihi hitungan keliling meja (${auto} kursi pada lebar ${q.cw} cm). Tamu akan duduk berdesakan.`])}
   if(q.buffet!=='none'){
-    if(r.counters.length===0)o.push(['bad','Tidak ada ruang untuk meja buffet setelah jalur pintu dikosongkan. Ubah posisi buffet atau kecilkan panggung.']);
+    if(r.counters.length===0)o.push(['bad','Tidak ada ruang untuk meja buffet setelah jalur pintu dikosongkan. Ubah posisi buffet atau kecilkan stage.']);
     else if(q.pre)o.push(['info',`Meja buffet dipotong di depan pintu dengan jarak bebas ${nf(DOOR_CLR,2)} m di kiri-kanan bukaan, serta menghindari kotak dinding dan ceruk. Total panjang meja buffet ±${nf(r.counterLen)} m.`]);
     else o.push(['warn','Posisi pintu ruangan custom tidak diketahui aplikasi. Pastikan meja buffet tidak menutup pintu saat dicek di lokasi.']);
   }
-  if(q.stage&&q.sw>q.W-2*q.perim)o.push(['warn','Panggung lebih lebar dari ruang di antara jalur keliling.']);
-  if(q.mode==='split'&&q.stage)o.push(['info','Panggung melintasi rel partisi. Saat ruangan dibagi, tiap sisi butuh panggung sendiri.']);
+  if(q.stage&&q.sw>q.W-2*q.perim)o.push(['warn','Stage lebih lebar dari ruang di antara jalur keliling.']);
+  if(q.mode==='split'&&q.stage)o.push(['info','Stage melintasi rel partisi. Saat ruangan dibagi, tiap sisi butuh stage sendiri.']);
   if(q.mode==='split'&&r.sideA!==r.sideB)o.push(['info',`Kapasitas sisi tidak sama (${r.sideA} dan ${r.sideB} meja) karena posisi buffet tidak simetris.`]);
   if(q.pre)o.push(['info','Posisi pintu, kolom, dan kotak di dinding samping mengikuti pembacaan denah arsitek dan perlu dicek di lokasi. Tanda ? di sisi timur belum dipastikan sebagai pintu.']);
   $('notes').innerHTML=o.map(([c,x])=>`<li class="${c}">${esc(x)}</li>`).join('');
@@ -428,7 +427,7 @@ function blurb(r){
   const lines=[`${q.name||'Ballroom'}`,`Luas ${area} m² (${nf(q.W)} × ${nf(q.D)} m)`];
   if(q.mode==='split')lines.push(`Dapat dibagi menjadi 2 ruang @ ${nf(q.W*q.D/2,1)} m², masing-masing hingga ±${nf(r.sideA*r.n,0)} dan ±${nf(r.sideB*r.n,0)} pax round table`);
   else lines.push(`Kapasitas round table hingga ±${nf(r.pax,0)} pax (${r.tables.length} meja Ø ${q.dia} cm, ${r.n} kursi per meja)`);
-  lines.push(q.stage?`Termasuk area panggung ${nf(Math.min(q.sw,q.W))} × ${nf(q.sd)} m`:'Tanpa panggung');
+  lines.push(q.stage?`Termasuk area stage ${nf(Math.min(q.sw,q.W))} × ${nf(q.sd)} m`:'Tanpa stage');
   $('blurb').value=lines.join('\n');
 }
 
@@ -496,7 +495,7 @@ $('btnPng').addEventListener('click',()=>{
   img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(svg));
 });
 
-(function(){try{const p=new URLSearchParams(location.hash.slice(1));for(const [k,v] of p){if(!(k in DEF))continue;if(typeof DEF[k]==='number'){const n=parseFloat(v);if(!isNaN(n))s[k]=n}else s[k]=v}}catch(e){}render()})();
+(function(){try{const p=new URLSearchParams(location.hash.slice(1));for(const [k,v] of p){if(!(k in DEF))continue;if(typeof DEF[k]==='number'){const n=parseFloat(v);if(!isNaN(n))s[k]=n}else s[k]=v}if(s.pat!=='zig'&&s.pat!=='grid')s.pat='zig';}catch(e){}render()})();
 </script>
 </body>
 </html>
