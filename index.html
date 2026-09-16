@@ -342,7 +342,7 @@ function svgPlan(r,opt){
   const ex=!!(opt&&opt.ex);
   const q=r.q,W=q.W,D=q.D;
   const S=Math.min(640/W,640/D);
-  const L=70,T=50,R=ex?300:100;
+  const L=70,T=50,R=100;
   const pw=W*S,ph=D*S;
   const vw=Math.max(L+pw+R,640);
   const tbY=T+ph+(q.pre?92:60)+(ex?0:(q.guide?140:(r.prop?34:0)));
@@ -427,25 +427,26 @@ function svgPlan(r,opt){
   g+=ln(dx,Y(0),dx,Y(D))+ln(dx-4,Y(0),dx+4,Y(0))+ln(dx-4,Y(D),dx+4,Y(D));
   g+=t(dx,T-12,`${nf(D)} m`,{w:600,c:C.ink});
   if(ex&&q.stage){
-    // rantai ukuran dari dinding atas sampai baris meja, digambar di margin kanan
-    const pn=(q.pnm||'').trim(),PN=pn&&pn.toLowerCase()!=='properti'?pn:'properti';
-    const segs=[[0,q.sb,'dinding atas ke stage'],[q.sb,q.sb+q.sd,'stage']];
-    if(r.prop){
-      segs.push([q.sb+q.sd,r.prop.y0,`stage ke ${PN}`]);
-      segs.push([r.prop.y0,r.prop.y1,PN]);
-      segs.push([r.prop.y1,r.top,`${PN} ke baris meja`]);
-    }else segs.push([q.sb+q.sd,r.top,'stage ke baris meja']);
-    const cx=X(W)+(q.pre?48:24)+52;
-    let lastY=-1e9;
-    segs.forEach(([a,b])=>{if(b-a<0.05)return;
-      g+=ln(X(W),Y(a),cx,Y(a),C.rule,0.6,'3 3')+ln(X(W),Y(b),cx,Y(b),C.rule,0.6,'3 3')});
-    segs.forEach(([a,b,lab])=>{
+    // rantai ukuran digambar di dalam denah, pada jalur keliling sisi kiri
+    const segs=[[0,q.sb],[q.sb,q.sb+q.sd]];
+    if(r.prop){segs.push([q.sb+q.sd,r.prop.y0],[r.prop.y0,r.prop.y1],[r.prop.y1,r.top]);}
+    else segs.push([q.sb+q.sd,r.top]);
+    const dxc=X(Math.max(0.5,Math.min(q.perim/2,0.9)));
+    const pos=[];let lastY=-1e9;
+    segs.forEach(([a,b])=>{
       if(b-a<0.05)return;
       const ya=Y(a),yb=Y(b),mid=(ya+yb)/2;
-      g+=ln(cx,ya,cx,yb,C.cyan,1.8,'5 4')+ln(cx-5,ya,cx+5,ya,C.cyan,1.8)+ln(cx-5,yb,cx+5,yb,C.cyan,1.8);
       let ty=mid;if(ty<lastY+15)ty=lastY+15;lastY=ty;
-      if(Math.abs(ty-mid)>3)g+=ln(cx+3,mid,cx+9,ty,C.cyan,0.6);
-      g+=t(cx+13,ty,`${nf(b-a,2)} m · ${lab}`,{a:'start',s:11,w:600,c:C.cyanT});
+      pos.push({a,b,ya,yb,mid,ty});
+    });
+    // rapikan dari bawah supaya angka tidak terdorong keluar ke area meja
+    let lim=Y(r.top)-8;
+    for(let i=pos.length-1;i>=0;i--){if(pos[i].ty>lim)pos[i].ty=lim;lim=pos[i].ty-15}
+    pos.forEach(({ya,yb,mid,ty,a,b})=>{
+      const lab=`${nf(b-a,2)} m`;
+      g+=ln(dxc,ya,dxc,yb,C.cyan,1.8,'5 4')+ln(dxc-5,ya,dxc+5,ya,C.cyan,1.8)+ln(dxc-5,yb,dxc+5,yb,C.cyan,1.8);
+      if(Math.abs(ty-mid)>3)g+=ln(dxc+3,mid,dxc+9,ty,C.cyan,0.6);
+      g+=chip(dxc+10+chipW(lab,11)/2,ty,lab,{stroke:C.cyan,c:C.cyanT,s:11});
     });
   }
   const propNote=r.prop?(()=>{const nm=(q.pnm||'').trim();
